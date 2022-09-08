@@ -67,4 +67,26 @@ public class ConnectionControllerIntegrationTest {
         assertThat(people).flatExtracting(Person::getName).containsExactlyInAnyOrder(alan.getName(), gagan.getName());
         assertThat(people).flatExtracting(Person::getRole).containsExactlyInAnyOrder(alan.getRole(), gagan.getRole());
     }
+
+    @Test
+    void canFindPeopleByTheirInterests() {
+        // setup - add people to db with roles
+        Person alan = new Person(0, "Alan", "Software Engineer", "Football");
+        restTemplate.postForEntity("http://localhost:" + port + "/person", alan, Person.class);
+        Person gagan = new Person(0, "Gagan", "Software Engineer", "Football");
+        restTemplate.postForEntity("http://localhost:" + port + "/person", gagan, Person.class);
+        Person sam = new Person(0, "Sam", "Product Manager", "Books");
+        restTemplate.postForEntity("http://localhost:" + port + "/person", sam, Person.class);
+
+        //action - finding them based on role
+        ResponseEntity<PersonList> getResponse = restTemplate.getForEntity("http://localhost:" + port + "/person/interests?interests=\"Football\"", PersonList.class);
+
+
+        //check - does it match what we set up
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        List<Person> people = getResponse.getBody().getPeople();
+        assertThat(people.size()).isEqualTo(2);
+        assertThat(people).flatExtracting(Person::getName).containsExactlyInAnyOrder(alan.getName(), gagan.getName());
+        assertThat(people).flatExtracting(Person::getInterests).containsExactlyInAnyOrder(alan.getInterests(), gagan.getInterests());
+    }
 }

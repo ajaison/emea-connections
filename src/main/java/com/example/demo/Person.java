@@ -58,5 +58,6 @@ public class Person {
     public void setInterests(String interests) {
         this.interests = interests;
     }
+
 }
 
