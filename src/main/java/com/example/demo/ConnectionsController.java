@@ -43,7 +43,7 @@ public class ConnectionsController {
         response.setPeople(personRepository.findPeopleByRoleEqualsIgnoreCase(role.replaceAll("^\"|\"$", "")));
         return response;
     }
-
+//test
     @CrossOrigin(origins = "http://localhost:3000")
     @GetMapping("/person/interests")
     public PersonList getPersonByInterests(@RequestParam String interests) {
