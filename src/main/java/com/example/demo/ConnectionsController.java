@@ -1,54 +1,54 @@
 package com.example.demo;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:3000")
 public class ConnectionsController {
 
-    private PersonRepository personRepository;
+    private final PersonRepository personRepository;
 
+    @Autowired
     public ConnectionsController(PersonRepository personRepository) {
         this.personRepository = personRepository;
     }
 
-    @GetMapping("/")
-    public String hello() {
-        return "Hello World";
-    }
-
-    @PostMapping("/person")
+    @PostMapping("/people")
+    @CrossOrigin(origins = "http://localhost:3000")
+    @ResponseStatus(HttpStatus.CREATED)
     public Person createPerson(@RequestBody Person person) {
         return personRepository.save(person);
     }
 
+
+    @GetMapping("/people/{id}")
     @CrossOrigin(origins = "http://localhost:3000")
-    @GetMapping("/person/{id}")
     public Person getPerson(@PathVariable Integer id) {
         return personRepository.findById(id).orElseThrow(() -> new PersonNotFoundException(id));
     }
 
-    @CrossOrigin(origins = "http://localhost:3000")
-    @GetMapping("/person/all")
-    public Person getPeople() {
-        return (Person) personRepository.findAll();
-    }
 
+    @GetMapping("/people")
     @CrossOrigin(origins = "http://localhost:3000")
-    @GetMapping("/person")
-    public PersonList getPersonByRole(@RequestParam String role) {
-        PersonList response = new PersonList();
-        response.setPeople(personRepository.findPeopleByRoleEqualsIgnoreCase(role.replaceAll("^\"|\"$", "")));
-        return response;
-    }
+    public PersonList getPeople(@RequestParam Optional<String> role, @RequestParam Optional<String> interests) {
+        Stream<Person> people = personRepository.findAll().stream();
 
-    @CrossOrigin(origins = "http://localhost:3000")
-    @GetMapping("/person/interests")
-    public PersonList getPersonByInterests(@RequestParam String interests) {
-        PersonList response = new PersonList();
-        response.setPeople(personRepository.findPeopleByInterestsEqualsIgnoreCase(interests.replaceAll("^\"|\"$", "")));
-        return response;
+        if (interests.isPresent()) {
+            people = people.filter(person -> interests.get().equalsIgnoreCase(person.getInterests()));
+        }
+
+        if (role.isPresent()) {
+            people = people.filter(person -> role.get().equalsIgnoreCase(person.getRole()));
+        }
+
+        PersonList list = new PersonList();
+        list.setPeople(people.toList());
+        return list;
     }
 }
